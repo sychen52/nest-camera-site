@@ -7,7 +7,7 @@ https://github.com/chrisjshull/homebridge-nest#using-a-google-account
 
 `uuid` is the camera uuid you would like to capture. Similar to the instruction linked above, expect that you need to `Filter` for `get_image`. The string after `uuid=` and before `&` is your camera uuid.
 
-These four items needs to be put into config.json
+These four items needs to be included into config.json. An example of config.json can be find as _config.json.
 
 ## Acknowledgement
 Thanks to Humpheh/nest-observe for googe authentication, and dend/foggycam for the idea.
