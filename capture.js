@@ -5,26 +5,31 @@ const fs = require('fs');
 const path = require('path');
 
 IMAGE_DIR = path.join(__dirname, '..', 'nest');
-const config = JSON.parse(fs.readFileSync('./config.json'));
-const fq = new FileQueue(config['rotation_hours']*3600/config['interval_seconds'], IMAGE_DIR)
 
 if (!fs.existsSync(IMAGE_DIR)) {
     fs.mkdirSync(IMAGE_DIR);
 }
 
 function capture() {
-    authGoogle(config['issueToken'], config['cookie'], config['apikey']).then(token => {
-        setTimeout(() => getImage(token), config['interval_seconds']*1000);
+    fs.readFile('./config.json', (err, data) => { 
+        const config = JSON.parse(data);
+        authGoogle(config['issueToken'], config['cookie'], config['apikey']).then(token => {
+            const fq = new FileQueue(config['rotation_hours']*3600/config['interval_seconds'], IMAGE_DIR);
+            setTimeout(() => getImage(token, fq, config), config['interval_seconds']*1000);
+        });
     });
 }
 
-function getImage(token){
+function getImage(token, fq, config){
     const now = new Date();
     if (now < token.expiry) {
-        setTimeout(() => getImage(token), config['interval_seconds']*1000);
+        setTimeout(() => getImage(token, fq, config), config['interval_seconds']*1000);
     }
     else {
-        setTimeout(capture, config['interval_seconds']*1000);
+        token.refresh().then(token => {
+            setTimeout(() => getImage(token, fq, config), 0);
+        });
+        return;
     }
 
     fetch(`https://nexusapi-us1.camera.home.nest.com/get_image?uuid=${config['uuid']}&width=1920`, {
