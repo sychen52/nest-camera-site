@@ -4,12 +4,7 @@ let promise = null;
 
 function render(offset) {
     if (!promise || offset === 0) {
-        promise = fetch('/files')
-        .then(res=>res.json())
-        .then(json => {
-            json.sort();
-            return json;
-        })
+        promise = fetch('/files').then(res=>res.json());
     }
     promise.then(files => {
         show(files[Math.round((files.length-1)*(1-offset))]);

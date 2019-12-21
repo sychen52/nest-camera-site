@@ -9,5 +9,12 @@ https://github.com/chrisjshull/homebridge-nest#using-a-google-account
 
 These four items needs to be included into config.json. An example of config.json can be find as _config.json.
 
+## Install
+After clone the repo, change directory in to the folder.
+```
+npm install
+npm run start
+```
+
 ## Acknowledgement
 Thanks to Humpheh/nest-observe for googe authentication, and dend/foggycam for the idea.

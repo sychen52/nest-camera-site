@@ -64,6 +64,7 @@ app.use((req, res, next) => {
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/files', (req, res) => {
     let files = fs.readdirSync(IMAGE_DIR);
+    files.sort();
     res.json(files);
 });
 
