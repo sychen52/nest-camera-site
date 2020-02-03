@@ -13,7 +13,7 @@ if (!fs.existsSync(IMAGE_DIR)) {
 function capture() {
     fs.readFile('./config.json', (err, data) => { 
         const config = JSON.parse(data);
-        authGoogle(config['issueToken'], config['cookie'], config['apikey']).then(token => {
+        authGoogle(config['issueToken'], config['cookies'], config['apiKey']).then(token => {
             const fq = new FileQueue(config['rotation_hours']*3600/config['interval_seconds'], IMAGE_DIR);
             setTimeout(() => getImage(token, fq, config), config['interval_seconds']*1000);
         });
