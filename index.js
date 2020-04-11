@@ -29,7 +29,9 @@ app.use(session({
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.post('/login', function (req, res) {
+    console.log("login user: ", user.username);
     if(req.body.username === user.username) {
+        console.log("verify password");
         bcrypt.compare(req.body.password, user.hash, (err, result) => {
             if (result && !err) {
                 req.session.user = user.username;
@@ -37,6 +39,7 @@ app.post('/login', function (req, res) {
                 res.redirect('/');
             }
             else {
+                console.log(err);
                 res.redirect('/login.html');
             }
         });
