@@ -9,14 +9,14 @@ https://github.com/chrisjshull/homebridge-nest#using-a-google-account
 
 These four items needs to be included into config.json. An example of config.json can be find as _config.json.
 
-## Local Install
+## Install
 After clone the repo, change directory in to the folder.
 ```
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./selfsigned.key -out selfsigned.crt
 npm install
 npm run start
 ```
-open a browser and go to the following url: https://127.0.0.1:5000.
+open a browser and go to the following url: https://[IP]:5000.
 
 Default credentials:
 ```
