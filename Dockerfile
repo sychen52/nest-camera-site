@@ -13,5 +13,6 @@ COPY database.json database.json
 RUN mkdir /nest
 VOLUME ["/nest"]
 
-EXPOSE 5000/tcp
+ENV PORT=5500
+EXPOSE 5500/tcp
 CMD ["npm", "run", "start"]
