@@ -17,7 +17,7 @@ if (!fs.existsSync(database)) {
     fs.writeFileSync(database, JSON.stringify({'username': username, 'hash': hash}));
 }
 
-const user = JSON.parse(fs.readFileSync(database));
+const user = JSON.parse(fs.readFileSync(database, "utf8"));
 
 const app = express();
 
@@ -29,17 +29,17 @@ app.use(session({
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.post('/login', function (req, res) {
-    console.log("login user: ", user.username);
     if(req.body.username === user.username) {
-        console.log("verify password");
+        console.log('verify password.', 'hash type:', typeof(user.hash), '; hash length:', user.hash.length);
         bcrypt.compare(req.body.password, user.hash, (err, result) => {
             if (result && !err) {
+                console.log('passed');
                 req.session.user = user.username;
                 req.session.admin = true;
                 res.redirect('/');
             }
             else {
-                console.log(err);
+                console.log('failed', err);
                 res.redirect('/login.html');
             }
         });
