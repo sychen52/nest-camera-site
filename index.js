@@ -58,7 +58,7 @@ app.get('/logout', function (req, res) {
 
 // Authentication and Authorization Middleware
 app.use((req, res, next) => {
-    if (req.session && req.session.user === 'csy' && req.session.admin)
+    if (req.session && req.session.user === user.username && req.session.admin)
         return next();
     else
         res.sendFile(path.join(__dirname, 'public', 'login.html'));
