@@ -30,12 +30,12 @@ Build image
 docker build -t nest-camera-site:latest .
 ```
 
-Star container:
+Start container:
 ```
 docker run --name nest-camera-site -d -p 5000:5000 -v [/path/to/your/nest_folder]:/nest nest-camera-site:latest
 ```
 
-open a browser and go to the following url: https://127.0.0.1:5000.
+open a browser and go to the following url: https://[IP]:5000.
 
 Default credentials:
 
