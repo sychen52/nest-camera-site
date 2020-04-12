@@ -43,6 +43,9 @@ user: admin
 pass: admin1
 
 If you want to change crendentials delete file `database.json` and rebuild image.
+```
+docker build --no-cache -t nest-camera-site:latest .
+```
 
 ## Acknowledgement
 Thanks to Humpheh/nest-observe for googe authentication, and dend/foggycam for the idea.
