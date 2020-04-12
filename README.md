@@ -18,5 +18,34 @@ npm run start
 ```
 open a browser and go to the following url: https://[IP]:5000.
 
+Default credentials:
+```
+user: admin
+pass: admin1
+```
+
+## Docker Install
+Build image
+```
+docker build -t nest-camera-site:latest .
+```
+
+Start container:
+```
+docker run --name nest-camera-site -d -p 5500:5500 -v [/path/to/your/nest_folder]:/nest nest-camera-site:latest
+```
+
+open a browser and go to the following url: https://[IP]:5500.
+
+Default credentials:
+
+user: admin
+pass: admin1
+
+If you want to change crendentials delete file `database.json` and rebuild image.
+```
+docker build --no-cache -t nest-camera-site:latest .
+```
+
 ## Acknowledgement
 Thanks to Humpheh/nest-observe for googe authentication, and dend/foggycam for the idea.
