@@ -93,5 +93,5 @@ let sslOptions = {
 
 https.createServer(sslOptions, app).listen(PORT, () => {
     console.log(`Server started on port ${PORT}`);
-    //capture();
+    capture();
 });
