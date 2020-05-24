@@ -9,15 +9,10 @@ const crypto = require('crypto')
 const {capture, IMAGE_DIR} = require('./capture');
 
 const database = './database.json';
-if (!fs.existsSync(database)) {
-    const readlineSync = require('readline-sync');
-    const username = readlineSync.question('username: ');
-    const password = readlineSync.questionNewPassword('password: ', {min: 6});
-    const hash = bcrypt.hashSync(password, 10);
-    fs.writeFileSync(database, JSON.stringify({'username': username, 'hash': hash}));
+let user = {};
+if (fs.existsSync(database)) {
+    user = JSON.parse(fs.readFileSync(database, "utf8"));
 }
-
-const user = JSON.parse(fs.readFileSync(database, "utf8"));
 
 const app = express();
 
@@ -49,6 +44,15 @@ app.post('/login', function (req, res) {
     }
 });
 
+app.post('/register', function (req, res) {
+    const readlineSync = require('readline-sync');
+    const hash = bcrypt.hashSync(req.body.password, 10);
+    user.username = req.body.username;
+    user.hash = hash;
+    fs.writeFileSync(database, JSON.stringify({'username': user.username, 'hash': hash}));
+    res.redirect('/');
+});
+
 // Logout endpoint
 app.get('/logout', function (req, res) {
     req.session.destroy();
@@ -61,7 +65,12 @@ app.use((req, res, next) => {
     if (req.session && req.session.user === user.username && req.session.admin)
         return next();
     else
-        res.sendFile(path.join(__dirname, 'public', 'login.html'));
+        if (!fs.existsSync(database)) {
+            res.sendFile(path.join(__dirname, 'public', 'register.html'));
+        }
+        else {
+            res.sendFile(path.join(__dirname, 'public', 'login.html'));
+        }
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -84,5 +93,5 @@ let sslOptions = {
 
 https.createServer(sslOptions, app).listen(PORT, () => {
     console.log(`Server started on port ${PORT}`);
-    capture();
+    //capture();
 });
