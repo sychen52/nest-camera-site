@@ -32,7 +32,7 @@ function getImage(token, fq, config){
         return;
     }
 
-    fetch(`https://nexusapi-us1.camera.home.nest.com/get_image?uuid=${config['uuid']}&width=1920`, {
+    fetch(`https://nexusapi-us1.camera.home.nest.com/get_image?uuid=${config['uuid']}&width=${config['resolution']}`, {
         method: 'GET',
         headers: {
             Origin: 'https://home.nest.com',

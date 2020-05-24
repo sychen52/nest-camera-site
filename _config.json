@@ -4,5 +4,6 @@
     "apiKey": "AIzaS...",
     "uuid": "...",
     "rotation_hours": 24,
-    "interval_seconds": 1.5
+    "interval_seconds": 1.5,
+    "resolution": 1920
 }
