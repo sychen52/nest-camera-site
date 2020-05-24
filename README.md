@@ -18,12 +18,6 @@ npm run start
 ```
 open a browser and go to the following url: https://[IP]:5000.
 
-Default credentials:
-```
-user: admin
-pass: admin1
-```
-
 ## Docker Install
 Build image
 ```
@@ -36,11 +30,6 @@ docker run --name nest-camera-site -d -p 5500:5500 -v [/path/to/your/nest_folder
 ```
 
 open a browser and go to the following url: https://[IP]:5500.
-
-Default credentials:
-
-user: admin
-pass: admin1
 
 If you want to change crendentials delete file `database.json` and rebuild image.
 ```
