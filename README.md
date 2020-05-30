@@ -12,7 +12,7 @@ These four items needs to be included into config.json. An example of config.jso
 ## Install
 After clone the repo, change directory in to the folder.
 ```
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./selfsigned.key -out selfsigned.crt
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./selfsigned.key -out ./selfsigned.crt
 npm install
 npm run start
 ```
