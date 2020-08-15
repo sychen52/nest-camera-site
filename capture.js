@@ -1,4 +1,3 @@
-const {authGoogle} = require('nest-observe');
 const {FileQueue, Log} = require('./utils');
 const fetch = require('node-fetch');
 const fs = require('fs');
