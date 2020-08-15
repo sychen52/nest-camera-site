@@ -1,7 +1,14 @@
 {
-    "issueToken": "https://accounts.google.com/o/oauth2/iframerpc?action=issueToken...",
-    "cookies": "OCAK=TOMPYI3cCPAt...",
-    "apiKey": "AIzaS...",
+    "platforms": [
+        {
+            "platform": "Nest",
+            "googleAuth": {
+                "issueToken": "https://accounts.google.com/o/oauth2/iframerpc?action=issueToken...",
+                "cookies": "OCAK=TOMPYI3cCPAt...",
+                "apiKey": "AIzaS..."
+            }
+        }
+    ],
     "uuid": "...",
     "server": "us1",
     "rotation_hours": 24,

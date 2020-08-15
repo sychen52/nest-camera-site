@@ -28,13 +28,13 @@ app.post('/login', function (req, res) {
         console.log('verify password.', 'hash type:', typeof(user.hash), '; hash length:', user.hash.length);
         bcrypt.compare(req.body.password, user.hash, (err, result) => {
             if (result && !err) {
-                console.log('passed');
+                console.log('password verification passed');
                 req.session.user = user.username;
                 req.session.admin = true;
                 res.redirect('/');
             }
             else {
-                console.log('failed', err);
+                console.log('password verification failed', err);
                 res.redirect('/login.html');
             }
         });

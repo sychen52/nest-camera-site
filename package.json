@@ -16,7 +16,6 @@
     "express-session": "^1.16.2",
     "homebridge-nest": "^3.5.1",
     "minimist": "^1.2.5",
-    "nest-observe": "^0.1.0",
     "readline-sync": "^1.4.10"
   },
   "devDependencies": {

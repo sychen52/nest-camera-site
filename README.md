@@ -37,4 +37,4 @@ docker build --no-cache -t nest-camera-site:latest .
 ```
 
 ## Acknowledgement
-Thanks to Humpheh/nest-observe for googe authentication, and dend/foggycam for the idea.
+Thanks to Humpheh/nest-observe and chrisjshull/homebridge-nest for authentication, and dend/foggycam for the idea.

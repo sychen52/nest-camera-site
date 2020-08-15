@@ -18,4 +18,11 @@ class FileQueue {
         }
     }
 }
-module.exports = {FileQueue};
+
+
+class Log {
+    log = console.log;
+    debug = console.log;
+    error = console.log;
+}
+module.exports = {FileQueue, Log};
