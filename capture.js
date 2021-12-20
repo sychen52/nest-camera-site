@@ -56,8 +56,10 @@ function getImage(config, fq){
         else {
             console.log(now, response.status);
             if (response.status != 404) {
-                console.log(response)
-                connect(config, fq);
+                console.log(response);
+                console.log(response.headers);
+                response.text().then(data => {console.log(data);});
+                connect(config, fq)
             }
             else {
                 setTimeout(() => getImage(config, fq), config['interval_seconds']*1000);

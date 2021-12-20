@@ -12,14 +12,14 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "crypto": "^1.0.1",
-    "express": "^4.17.1",
-    "express-session": "^1.16.2",
-    "homebridge-nest": "^3.5.1",
+    "express": "^4.17.2",
+    "express-session": "^1.17.2",
+    "homebridge-nest": "^4.6.3",
     "minimist": "^1.2.5",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.6",
     "readline-sync": "^1.4.10"
   },
   "devDependencies": {
-    "nodemon": "^1.19.2"
+    "nodemon": "^1.19.4"
   }
 }
