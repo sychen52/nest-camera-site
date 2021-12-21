@@ -2,11 +2,7 @@
     "platforms": [
         {
             "platform": "Nest",
-            "googleAuth": {
-                "issueToken": "https://accounts.google.com/o/oauth2/iframerpc?action=issueToken...",
-                "cookies": "OCAK=TOMPYI3cCPAt...",
-                "apiKey": "AIzaS..."
-            }
+            "refreshToken": "1//..."
         }
     ],
     "uuid": "...",
