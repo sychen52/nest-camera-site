@@ -22,14 +22,16 @@ function capture() {
 
 function connect(config, fq) {
     const log = new Log();
-    const conn = new NestConnection(config.platforms[0], log, false);
+    const conn = new NestConnection(config.platforms[0], log, false, false);
     conn.auth().then(connected => {
-        if (connected) {
-            setTimeout(() => getImage(config, fq), config['interval_seconds']*1000);
-        } else {
+        if (!connected) {
             console.log('Unable to connect to Nest service.');
-            setTimeout(() => getImage(config, fq), config['interval_seconds']*1000);
-        }
+	}
+        setTimeout(() => getImage(config, fq), config['interval_seconds']*1000);
+    })
+    .catch((err) => {
+        console.log('Caught an error in connect.', err);
+        setTimeout(() => getImage(config, fq), config['interval_seconds']*1000);
     });
 }
 
