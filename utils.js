@@ -21,8 +21,8 @@ class FileQueue {
 
 
 class Log {
-    log = console.log;
-    debug = console.log;
-    error = console.log;
+    log(x) { console.log(x); }
+    debug(x) { console.log(x); }
+    error(x) { console.log(x); }
 }
 module.exports = {FileQueue, Log};
