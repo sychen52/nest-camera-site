@@ -20,6 +20,6 @@
     "readline-sync": "^1.4.10"
   },
   "devDependencies": {
-    "nodemon": "^2.0.15"
+    "nodemon": "^2.0.20"
   }
 }
