@@ -11,15 +11,13 @@
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "crypto": "^1.0.1",
     "express": "^4.22.1",
     "express-session": "^1.17.2",
-    "homebridge-nest": "^4.6.3",
-    "minimist": "^1.2.6",
     "node-fetch": "^2.6.7",
+    "puppeteer": "^24.40.0",
     "readline-sync": "^1.4.10"
   },
   "devDependencies": {
-    "nodemon": "^2.0.20"
+    "nodemon": "^3.1.14"
   }
 }

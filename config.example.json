@@ -1,0 +1,7 @@
+{
+    "shared_token": "YOUR_TOKEN",
+    "shared_password": "your_password_here",
+    "rotation_hours": 24,
+    "interval_seconds": 1.5,
+    "resolution_ratio": 1
+}

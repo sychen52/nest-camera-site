@@ -4,7 +4,7 @@ const path = require('path');
 class FileQueue {
     constructor(size, init_dir) {
         this.size = size;
-        this.q = fs.readdirSync(init_dir);
+        this.q = fs.readdirSync(init_dir).filter(f => f.endsWith('.jpg'));
         this.q = this.q.map(f => path.join(init_dir, f));
     }
     push(filename) {

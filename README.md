@@ -1,22 +1,32 @@
 # nest-camera-site
-Capture images from a nest camera and host in a local server. 
+Capture images from a shared nest camera stream and host in a local server.
 
 ## Configuration
-`issueToken`, `cookies` and `apiKey` can be obtain by following the following instruction:
-https://github.com/chrisjshull/homebridge-nest#using-a-google-account
+This script now connects directly to a shared Nest camera stream. To configure it, you need to share your Nest camera with a password and gather the public token and password.
 
-`uuid` is the camera uuid you would like to capture. Similar to the instruction linked above, expect that you need to `Filter` for `get_image`. The string after `uuid=` and before `&` is your camera uuid.
+1. Go to your Nest app or web interface, share your Nest Camera, and protect it with a password.
+2. Copy the public link which looks like `https://video.nest.com/live/YOUR_TOKEN`. `YOUR_TOKEN` is your `shared_token`.
+3. The password you set is your `shared_password`.
 
-These four items needs to be included into config.json. An example of config.json can be find as _config.json.
+Create a `config.json` in the root of the project with the following structure (an example is in `config.example.json`):
+
+```json
+{
+    "shared_token": "YOUR_TOKEN",
+    "shared_password": "your_password_here",
+    "rotation_hours": 24,
+    "interval_seconds": 1.5,
+    "resolution_ratio": 1
+}
+```
 
 ## Install
-After clone the repo, change directory in to the folder.
+After cloning the repo, change directory into the folder.
 ```
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./selfsigned.key -out ./selfsigned.crt
 npm install
 npm run start
 ```
-open a browser and go to the following url: https://[IP]:5000.
+Open a browser and go to the following url: http://[IP]:5500.
 
 ## Docker Install
 Build image
@@ -29,12 +39,12 @@ Start container:
 docker run --name nest-camera-site -d -p 5500:5500 -v [/path/to/your/nest_folder]:/nest nest-camera-site:latest
 ```
 
-open a browser and go to the following url: https://[IP]:5500.
+Open a browser and go to the following url: http://[IP]:5500.
 
-If you want to change crendentials delete file `database.json` and rebuild image.
+If you want to change credentials delete file `database.json` and rebuild the image.
 ```
 docker build --no-cache -t nest-camera-site:latest .
 ```
 
 ## Acknowledgement
-Thanks to Humpheh/nest-observe and chrisjshull/homebridge-nest for authentication, and dend/foggycam for the idea.
+Thanks to Humpheh/nest-observe and dend/foggycam for the original ideas.

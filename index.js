@@ -75,7 +75,7 @@ app.use((req, res, next) => {
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/files', (req, res) => {
-    let files = fs.readdirSync(IMAGE_DIR);
+    let files = fs.readdirSync(IMAGE_DIR).filter(f => f.endsWith('.jpg'));
     files.sort();
     res.json(files);
 });
@@ -84,14 +84,9 @@ app.get('/img/:filename', (req, res) => {
     res.sendFile(path.join(IMAGE_DIR, req.params.filename));
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5500;
 
-let sslOptions = {
-    key: fs.readFileSync('selfsigned.key', 'utf8'),
-    cert: fs.readFileSync('selfsigned.crt', 'utf8')
-  };
-
-https.createServer(sslOptions, app).listen(PORT, () => {
+app.listen(PORT, () => {
     console.log(`Server started on port ${PORT}`);
     capture();
 });
