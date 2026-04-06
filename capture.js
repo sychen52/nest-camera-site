@@ -173,7 +173,11 @@ async function getImage(config, session) {
     }
 }
 
+let isStitching = false;
+
 async function stitchImages(config, fq) {
+    if (isStitching) return;
+    isStitching = true;
     const log = new Log();
     try {
         let allFiles = fs.readdirSync(IMAGE_DIR).filter(f => f.endsWith('.jpg')).sort();
@@ -245,6 +249,8 @@ async function stitchImages(config, fq) {
         }
     } catch (e) {
         log.error('Error during stitching: ' + e.message);
+    } finally {
+        isStitching = false;
     }
 }
 module.exports = {capture, IMAGE_DIR};
