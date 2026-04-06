@@ -176,41 +176,50 @@ async function getImage(config, session) {
 async function stitchImages(config, fq) {
     const log = new Log();
     try {
-        const files = fs.readdirSync(IMAGE_DIR).filter(f => f.endsWith('.jpg')).sort();
-        if (files.length === 0) return;
-
-        // Exclude the most recent file just in case it's currently being written
-        if (files.length > 1) {
-            files.pop();
-        }
-
-        if (files.length === 0) return;
-
-        const firstFile = files[0];
-        const videoName = firstFile.replace('.jpg', '.mp4');
-        const videoPath = path.join(IMAGE_DIR, videoName);
-        const listPath = path.join(IMAGE_DIR, `list_${Date.now()}.txt`);
-
-        // Create ffmpeg concat list
-        const listContent = files.map(f => `file '${path.join(IMAGE_DIR, f)}'`).join('\n');
-        fs.writeFileSync(listPath, listContent);
+        let allFiles = fs.readdirSync(IMAGE_DIR).filter(f => f.endsWith('.jpg')).sort();
+        if (allFiles.length <= 1) return;
 
         const fps = 1 / (config.interval_seconds || 1.5);
+        const maxImagesPerChunk = Math.round(STITCH_INTERVAL_MINUTES * 60 * fps);
 
-        log.log(`Stitching ${files.length} images into ${videoName}...`);
-        await execPromise(`ffmpeg -y -r ${fps.toFixed(2)} -f concat -safe 0 -i "${listPath}" -c:v libx264 -pix_fmt yuv420p "${videoPath}"`);
+        while (allFiles.length > 1) {
+            let filesToStitch = [];
 
-        fq.push(videoPath);
+            if (allFiles.length > maxImagesPerChunk) {
+                // Take exactly one chunk's worth of images
+                filesToStitch = allFiles.slice(0, maxImagesPerChunk);
+                allFiles = allFiles.slice(maxImagesPerChunk);
+            } else {
+                // Take everything except the very last file (which might be currently writing)
+                filesToStitch = allFiles.slice(0, -1);
+                allFiles = []; // Stop loop
+            }
 
-        // Cleanup
-        fs.unlinkSync(listPath);
-        for (let f of files) {
-            try { fs.unlinkSync(path.join(IMAGE_DIR, f)); } catch(e){}
+            if (filesToStitch.length === 0) break;
+
+            const firstFile = filesToStitch[0];
+            const videoName = firstFile.replace('.jpg', '.mp4');
+            const videoPath = path.join(IMAGE_DIR, videoName);
+            const listPath = path.join(IMAGE_DIR, `list_${Date.now()}.txt`);
+
+            // Create ffmpeg concat list
+            const listContent = filesToStitch.map(f => `file '${path.join(IMAGE_DIR, f)}'`).join('\n');
+            fs.writeFileSync(listPath, listContent);
+
+            log.log(`Stitching ${filesToStitch.length} images into ${videoName}...`);
+            await execPromise(`ffmpeg -y -r ${fps.toFixed(2)} -f concat -safe 0 -i "${listPath}" -c:v libx264 -pix_fmt yuv420p "${videoPath}"`);
+
+            fq.push(videoPath);
+
+            // Cleanup
+            fs.unlinkSync(listPath);
+            for (let f of filesToStitch) {
+                try { fs.unlinkSync(path.join(IMAGE_DIR, f)); } catch(e){}
+            }
+            log.log(`Stitching complete: ${videoName}`);
         }
-        log.log(`Stitching complete: ${videoName}`);
     } catch (e) {
         log.error('Error during stitching: ' + e.message);
     }
 }
-
 module.exports = {capture, IMAGE_DIR};
