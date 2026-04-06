@@ -179,21 +179,28 @@ async function stitchImages(config, fq) {
         let allFiles = fs.readdirSync(IMAGE_DIR).filter(f => f.endsWith('.jpg')).sort();
         if (allFiles.length <= 1) return;
 
-        const fps = 1 / (config.interval_seconds || 1.5);
-        const maxImagesPerChunk = Math.round(STITCH_INTERVAL_MINUTES * 60 * fps);
-
         while (allFiles.length > 1) {
-            let filesToStitch = [];
-
-            if (allFiles.length > maxImagesPerChunk) {
-                // Take exactly one chunk's worth of images
-                filesToStitch = allFiles.slice(0, maxImagesPerChunk);
-                allFiles = allFiles.slice(maxImagesPerChunk);
-            } else {
-                // Take everything except the very last file (which might be currently writing)
-                filesToStitch = allFiles.slice(0, -1);
-                allFiles = []; // Stop loop
+            const firstTime = new Date(allFiles[0].replace('.jpg', '')).getTime();
+            let sliceIdx = 1;
+            
+            // Find how many files fit into this 5-minute window
+            while (sliceIdx < allFiles.length - 1) {
+                const currentTime = new Date(allFiles[sliceIdx].replace('.jpg', '')).getTime();
+                if (currentTime - firstTime >= STITCH_INTERVAL_MINUTES * 60 * 1000) {
+                    break;
+                }
+                sliceIdx++;
             }
+
+            // If we haven't reached a 5-minute span and we're at the end of the available files 
+            // (minus the last one being written), we wait for the next interval.
+            const lastTimeInSlice = new Date(allFiles[sliceIdx].replace('.jpg', '')).getTime();
+            if (sliceIdx === allFiles.length - 1 && lastTimeInSlice - firstTime < STITCH_INTERVAL_MINUTES * 60 * 1000) {
+                break;
+            }
+
+            let filesToStitch = allFiles.slice(0, sliceIdx);
+            allFiles = allFiles.slice(sliceIdx);
 
             if (filesToStitch.length === 0) break;
 
@@ -202,12 +209,30 @@ async function stitchImages(config, fq) {
             const videoPath = path.join(IMAGE_DIR, videoName);
             const listPath = path.join(IMAGE_DIR, `list_${Date.now()}.txt`);
 
-            // Create ffmpeg concat list
-            const listContent = filesToStitch.map(f => `file '${path.join(IMAGE_DIR, f)}'`).join('\n');
+            // Create ffmpeg concat list with exact calculated durations per frame
+            let listContent = '';
+            for (let i = 0; i < filesToStitch.length; i++) {
+                listContent += `file '${path.join(IMAGE_DIR, filesToStitch[i])}'\n`;
+                if (i < filesToStitch.length - 1) {
+                    const t1 = new Date(filesToStitch[i].replace('.jpg', '')).getTime();
+                    const t2 = new Date(filesToStitch[i+1].replace('.jpg', '')).getTime();
+                    let durSec = (t2 - t1) / 1000;
+                    // Cap max duration between frames to 60 seconds so huge gaps don't crash playback
+                    if (durSec > 60) durSec = 60; 
+                    listContent += `duration ${durSec.toFixed(3)}\n`;
+                } else {
+                    // Last frame gets the nominal configured interval as its duration
+                    listContent += `duration ${config.interval_seconds || 1.5}\n`;
+                    listContent += `file '${path.join(IMAGE_DIR, filesToStitch[i])}'\n`; // ffmpeg concat demuxer quirk
+                }
+            }
+            
             fs.writeFileSync(listPath, listContent);
-
-            log.log(`Stitching ${filesToStitch.length} images into ${videoName}...`);
-            await execPromise(`ffmpeg -y -r ${fps.toFixed(2)} -f concat -safe 0 -i "${listPath}" -c:v libx264 -pix_fmt yuv420p "${videoPath}"`);
+            
+            log.log(`Stitching ${filesToStitch.length} images spanning ${((lastTimeInSlice - firstTime)/1000/60).toFixed(1)} mins into ${videoName}...`);
+            
+            // Generate variable framerate video (-vsync vfr)
+            await execPromise(`ffmpeg -y -f concat -safe 0 -i "${listPath}" -vsync vfr -c:v libx264 -pix_fmt yuv420p "${videoPath}"`);
 
             fq.push(videoPath);
 
