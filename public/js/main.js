@@ -9,9 +9,14 @@ let currentPlayingIdx = -1;
 let isScrubbing = false;
 let isLive = false;
 let liveInterval = null;
+let serverTimeOffset = 0;
 
 // 5 minutes in milliseconds
 const CHUNK_DURATION_MS = 5 * 60 * 1000;
+
+function getServerTime() {
+    return Date.now() + serverTimeOffset;
+}
 
 function renderMarks(minMs, maxMs) {
     marksContainer.innerHTML = '';
@@ -69,11 +74,17 @@ function renderTrack(minMs, maxMs) {
 }
 
 function loadVideos() {
-    fetch('/videos').then(res => res.json()).then(files => {
+    fetch('/videos').then(res => {
+        const serverDate = res.headers.get('Date');
+        if (serverDate) {
+            serverTimeOffset = new Date(serverDate).getTime() - Date.now();
+        }
+        return res.json();
+    }).then(files => {
         if (files.length === 0) {
             label.innerText = "LIVE - No videos recorded yet.";
-            timeline.min = Date.now() - 60000;
-            timeline.max = Date.now();
+            timeline.min = getServerTime() - 60000;
+            timeline.max = getServerTime();
             goLive();
             return;
         }
@@ -90,7 +101,7 @@ function loadVideos() {
         videoFiles = newVideoFiles;
 
         const minTime = videoFiles[0].startMs;
-        const maxTime = Date.now();
+        const maxTime = getServerTime();
 
         if (!isScrubbing) {
             timeline.min = minTime;
@@ -115,7 +126,7 @@ function goLive() {
 
         liveInterval = setInterval(() => {
             if (!isScrubbing) {
-                const now = Date.now();
+                const now = getServerTime();
                 const minTime = videoFiles.length > 0 ? videoFiles[0].startMs : now - 60000;
                 timeline.max = now;
                 timeline.value = now;
@@ -125,7 +136,7 @@ function goLive() {
             liveViewer.src = '/latest_image?t=' + Date.now();
         }, 1500);
 
-        const now = Date.now();
+        const now = getServerTime();
         timeline.max = now;
         timeline.value = now;
         updateLabel(now, true);
@@ -193,7 +204,7 @@ function updateLabel(timeMs, isLiveText = false) {
 timeline.addEventListener('input', () => {
     isScrubbing = true;
     const timeMs = parseInt(timeline.value);
-    const maxVideoTime = videoFiles.length > 0 ? videoFiles[videoFiles.length - 1].endMs : Date.now();
+    const maxVideoTime = videoFiles.length > 0 ? videoFiles[videoFiles.length - 1].endMs : getServerTime();
     updateLabel(timeMs, timeMs >= maxVideoTime - 5000);
 });
 
