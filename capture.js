@@ -2,8 +2,12 @@ const {FileQueue, Log} = require('./utils');
 const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
+const { exec } = require('child_process');
+const util = require('util');
+const execPromise = util.promisify(exec);
 
 const IMAGE_DIR = path.join(__dirname, '..', 'nest');
+const STITCH_INTERVAL_MINUTES = 5;
 
 if (!fs.existsSync(IMAGE_DIR)) {
     fs.mkdirSync(IMAGE_DIR, { recursive: true });
@@ -16,12 +20,49 @@ function capture() {
             return;
         }
         const config = JSON.parse(data);
-        const fq = new FileQueue(config['rotation_hours']*3600/config['interval_seconds'], IMAGE_DIR);
-        connect(config, fq);
+        const maxVideos = config['rotation_hours'] * (60 / STITCH_INTERVAL_MINUTES);
+        const fq = new FileQueue(maxVideos, IMAGE_DIR, '.mp4');
+
+        connect(config);
+
+        // Run stitcher periodically
+        setInterval(() => stitchImages(config, fq), STITCH_INTERVAL_MINUTES * 60 * 1000);
+
+        // Run cleanup periodically (every hour)
+        setInterval(() => cleanOldFiles(config), 60 * 60 * 1000);
+
+        // Also run once shortly after startup if there are orphaned images
+        setTimeout(() => stitchImages(config, fq), 60 * 1000);
+        setTimeout(() => cleanOldFiles(config), 60 * 1000);
     });
 }
 
-async function connect(config, fq) {
+function cleanOldFiles(config) {
+    const log = new Log();
+    try {
+        if (!config.rotation_hours) return;
+        const maxAgeMs = config.rotation_hours * 60 * 60 * 1000;
+        const now = Date.now();
+        const files = fs.readdirSync(IMAGE_DIR);
+
+        let deletedCount = 0;
+        for (let f of files) {
+            const filePath = path.join(IMAGE_DIR, f);
+            const stats = fs.statSync(filePath);
+            if (now - stats.mtimeMs > maxAgeMs) {
+                fs.unlinkSync(filePath);
+                deletedCount++;
+            }
+        }
+        if (deletedCount > 0) {
+            log.log(`Cleaned up ${deletedCount} old files (older than ${config.rotation_hours} hours).`);
+        }
+    } catch (e) {
+        log.error('Error cleaning old files: ' + e.message);
+    }
+}
+
+async function connect(config) {
     const log = new Log();
     log.log('Authenticating with Nest shared stream...');
     try {
@@ -85,20 +126,20 @@ async function connect(config, fq) {
 
         const session = { uuid, host, cookieStr, nativeWidth };
 
-        setTimeout(() => getImage(config, session, fq), config['interval_seconds']*1000);
+        setTimeout(() => getImage(config, session), config['interval_seconds']*1000);
 
     } catch (err) {
         log.error('Caught an error in connect: ' + err.message);
-        setTimeout(() => connect(config, fq), 10000); // Retry connection after 10s
+        setTimeout(() => connect(config), 10000); // Retry connection after 10s
     }
 }
 
-async function getImage(config, session, fq) {
+async function getImage(config, session) {
     const now = new Date();
-    const { uuid, host, cookieStr } = session;
+    const { uuid, host, cookieStr, nativeWidth } = session;
 
-    // Default to 1920 base width. If resolution_ratio is provided, scale it.
-    const reqWidth = config.resolution_ratio ? Math.round(1920 * config.resolution_ratio) : (config.resolution || 1920);
+    // Scale the native width using the configured resolution_ratio
+    const reqWidth = config.resolution_ratio ? Math.round(nativeWidth * config.resolution_ratio) : nativeWidth;
     const url = `https://${host}/get_image?uuid=${uuid}&width=${reqWidth}`;
 
     try {
@@ -115,21 +156,60 @@ async function getImage(config, session, fq) {
             const filename = path.join(IMAGE_DIR, now.toJSON()+'.jpg');
             const file = fs.createWriteStream(filename);
             response.body.pipe(file);
-            fq.push(filename);
 
-            setTimeout(() => getImage(config, session, fq), config['interval_seconds']*1000);
+            setTimeout(() => getImage(config, session), config['interval_seconds']*1000);
         } else {
             console.log(now, response.status, 'failed to fetch image');
             if (response.status === 401 || response.status === 403) {
                 console.log('Session expired or unauthorized, reconnecting...');
-                connect(config, fq);
+                connect(config);
             } else {
-                setTimeout(() => getImage(config, session, fq), config['interval_seconds']*1000);
+                setTimeout(() => getImage(config, session), config['interval_seconds']*1000);
             }
         }
     } catch (error) {
         console.log(now, "fetch error caught:", error.message);
-        setTimeout(() => getImage(config, session, fq), config['interval_seconds']*1000);
+        setTimeout(() => getImage(config, session), config['interval_seconds']*1000);
+    }
+}
+
+async function stitchImages(config, fq) {
+    const log = new Log();
+    try {
+        const files = fs.readdirSync(IMAGE_DIR).filter(f => f.endsWith('.jpg')).sort();
+        if (files.length === 0) return;
+
+        // Exclude the most recent file just in case it's currently being written
+        if (files.length > 1) {
+            files.pop();
+        }
+
+        if (files.length === 0) return;
+
+        const firstFile = files[0];
+        const videoName = firstFile.replace('.jpg', '.mp4');
+        const videoPath = path.join(IMAGE_DIR, videoName);
+        const listPath = path.join(IMAGE_DIR, `list_${Date.now()}.txt`);
+
+        // Create ffmpeg concat list
+        const listContent = files.map(f => `file '${path.join(IMAGE_DIR, f)}'`).join('\n');
+        fs.writeFileSync(listPath, listContent);
+
+        const fps = 1 / (config.interval_seconds || 1.5);
+
+        log.log(`Stitching ${files.length} images into ${videoName}...`);
+        await execPromise(`ffmpeg -y -r ${fps.toFixed(2)} -f concat -safe 0 -i "${listPath}" -c:v libx264 -pix_fmt yuv420p "${videoPath}"`);
+
+        fq.push(videoPath);
+
+        // Cleanup
+        fs.unlinkSync(listPath);
+        for (let f of files) {
+            try { fs.unlinkSync(path.join(IMAGE_DIR, f)); } catch(e){}
+        }
+        log.log(`Stitching complete: ${videoName}`);
+    } catch (e) {
+        log.error('Error during stitching: ' + e.message);
     }
 }
 

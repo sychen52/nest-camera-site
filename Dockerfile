@@ -1,9 +1,9 @@
 FROM node:latest
 
-RUN git clone https://github.com/sychen52/nest-camera-site.git
-
 WORKDIR /nest-camera-site
-COPY config.json /nest-camera-site
+COPY . /nest-camera-site
+
+RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
 
 RUN npm install
 

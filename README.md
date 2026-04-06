@@ -15,12 +15,14 @@ Create a `config.json` in the root of the project with the following structure (
     "shared_token": "YOUR_TOKEN",
     "shared_password": "your_password_here",
     "rotation_hours": 24,
-    "interval_seconds": 1.5,
+    "interval_seconds": 0.2,
     "resolution_ratio": 1
 }
 ```
 
 ## Install
+**Requirement:** You must have `ffmpeg` installed on your host machine to stitch the captured images into video chunks. (e.g. `brew install ffmpeg` or `sudo apt-get install ffmpeg`).
+
 After cloning the repo, change directory into the folder.
 ```
 npm install

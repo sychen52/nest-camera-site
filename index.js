@@ -45,7 +45,6 @@ app.post('/login', function (req, res) {
 });
 
 app.post('/register', function (req, res) {
-    const readlineSync = require('readline-sync');
     const hash = bcrypt.hashSync(req.body.password, 10);
     user.username = req.body.username;
     user.hash = hash;
@@ -74,13 +73,27 @@ app.use((req, res, next) => {
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
-app.get('/files', (req, res) => {
-    let files = fs.readdirSync(IMAGE_DIR).filter(f => f.endsWith('.jpg'));
+app.get('/videos', (req, res) => {
+    let files = fs.readdirSync(IMAGE_DIR).filter(f => f.endsWith('.mp4'));
     files.sort();
     res.json(files);
 });
 
-app.get('/img/:filename', (req, res) => {
+app.get('/latest_image', (req, res) => {
+    try {
+        let files = fs.readdirSync(IMAGE_DIR).filter(f => f.endsWith('.jpg'));
+        if (files.length === 0) {
+            return res.status(404).send('No images');
+        }
+        files.sort();
+        const latest = files[files.length - 1];
+        res.sendFile(path.join(IMAGE_DIR, latest));
+    } catch (e) {
+        res.status(500).send('Error');
+    }
+});
+
+app.get('/video/:filename', (req, res) => {
     res.sendFile(path.join(IMAGE_DIR, req.params.filename));
 });
 

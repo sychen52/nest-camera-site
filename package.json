@@ -13,9 +13,7 @@
     "bcryptjs": "^2.4.3",
     "express": "^4.22.1",
     "express-session": "^1.17.2",
-    "node-fetch": "^2.6.7",
-    "puppeteer": "^24.40.0",
-    "readline-sync": "^1.4.10"
+    "node-fetch": "^2.6.7"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
