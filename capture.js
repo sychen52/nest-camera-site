@@ -124,9 +124,9 @@ async function connect(config) {
 
         log.log(`Connected successfully. Camera UUID: ${uuid}, Host: ${host}, Max Native Width Found: ${nativeWidth}`);
 
-        const session = { uuid, host, cookieStr, nativeWidth };
+        const session = { uuid, host, cookieStr, nativeWidth, inflight: 0, stopped: false };
 
-        setTimeout(() => getImage(config, session), config['interval_seconds']*1000);
+        session.captureInterval = setInterval(() => getImage(config, session), config['interval_seconds'] * 1000);
 
     } catch (err) {
         log.error('Caught an error in connect: ' + err.message);
@@ -135,6 +135,13 @@ async function connect(config) {
 }
 
 async function getImage(config, session) {
+    if (session.stopped) return;
+    if (session.inflight > 10) {
+        console.log('Skipping frame, network backlogged...');
+        return;
+    }
+
+    session.inflight++;
     const now = new Date();
     const { uuid, host, cookieStr, nativeWidth } = session;
 
@@ -153,23 +160,24 @@ async function getImage(config, session) {
         });
 
         if (response.ok) {
+            const buffer = await response.buffer();
             const filename = path.join(IMAGE_DIR, now.toJSON()+'.jpg');
-            const file = fs.createWriteStream(filename);
-            response.body.pipe(file);
-
-            setTimeout(() => getImage(config, session), config['interval_seconds']*1000);
+            fs.writeFile(filename, buffer, () => {});
         } else {
             console.log(now, response.status, 'failed to fetch image');
             if (response.status === 401 || response.status === 403) {
                 console.log('Session expired or unauthorized, reconnecting...');
-                connect(config);
-            } else {
-                setTimeout(() => getImage(config, session), config['interval_seconds']*1000);
+                if (!session.stopped) {
+                    session.stopped = true;
+                    clearInterval(session.captureInterval);
+                    connect(config);
+                }
             }
         }
     } catch (error) {
         console.log(now, "fetch error caught:", error.message);
-        setTimeout(() => getImage(config, session), config['interval_seconds']*1000);
+    } finally {
+        session.inflight--;
     }
 }
 
