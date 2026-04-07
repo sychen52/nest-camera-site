@@ -15,7 +15,7 @@ Create a `config.json` in the root of the project with the following structure (
     "shared_token": "YOUR_TOKEN",
     "shared_password": "your_password_here",
     "rotation_hours": 24,
-    "interval_seconds": 0.2,
+    "interval_seconds": 0.9,
     "resolution_ratio": 1
 }
 ```
